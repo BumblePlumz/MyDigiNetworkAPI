@@ -1,7 +1,10 @@
 export class AuthError extends Error {
     constructor(code, message) {
         super(message);
-        this.code = code ?? 500;
-        this.message = message ?? 'Internal server error';
+        this.code = code;
+        this.name = this.constructor.name;
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor);
+        }
     }
 }

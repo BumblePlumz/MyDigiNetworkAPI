@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { asyncHandler } from "./AsyncHandler.js";
+import { asyncHandler } from "../AsyncHandler.js";
 import {
   postMessage,
   patchMessage,
@@ -10,43 +10,32 @@ const messageRouter = Router();
 
 messageRouter.post(
   "/:id",
-  asyncHandler(async (req, res, next) => {
-    try {
-      const userID = req.user.dataValues.id;
-      const roomID = req.params.id;
-      const { content } = req.body;
-      await postMessage(userID, roomID, content);
-      res.status(201).json();
-    } catch (e) {
-      next(e);
-    }
+  asyncHandler(async (req, res) => {
+    const userID = req.user.dataValues.id;
+    const roomID = req.params.id;
+    const { content } = req.body;
+    await postMessage(userID, roomID, content);
+    res.status(201).json();
   })
 );
 
 messageRouter.patch(
   "/:id",
-  asyncHandler(async (req, res, next) => {
-    try {
-      const messageID = req.params.id;
-      const { content } = req.body;
-      await patchMessage(messageID, content);
-      res.status(200).json();
-    } catch (e) {
-      next(e);
-    }
+  asyncHandler(async (req, res) => {
+    const messageID = req.params.id;
+    const { content } = req.body;
+    await patchMessage(messageID, content);
+    res.status(200).json();
   })
 );
 
 messageRouter.delete(
   "/:id",
-  asyncHandler(async (req, res, next) => {
-    try {
-      const messageID = req.params.id;
-      await deleteMessage(messageID);
-      res.status(200).json();
-    } catch (e) {
-      next(e);
-    }
+  asyncHandler(async (req, res) => {
+    const userID = req.user.dataValues.id;
+    const messageID = req.params.id;
+    await deleteMessage(userID, messageID);
+    res.status(200).json();
   })
 );
 

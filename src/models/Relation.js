@@ -6,54 +6,81 @@ import { Room } from "./Room.js";
 import { Message } from "./Message.js";
 
 export const setupRelations = () => {
-  User.hasMany(Subscription, { foreignKey: "ownerID" });
-  User.hasMany(Subscription, { foreignKey: "targetID" });
-
-  Subscription.belongsTo(User, {
+  User.hasMany(Subscription, { 
     foreignKey: "ownerID",
     onDelete: "CASCADE",
-    onUpdate: "RESTRICT",
+  });
+  Subscription.belongsTo(User, {
+    foreignKey: "ownerID",
+  });
+
+  User.hasMany(Subscription, { 
+    foreignKey: "targetID",
+    onDelete: "CASCADE",
   });
   Subscription.belongsTo(User, {
     foreignKey: "targetID",
-    onDelete: "SET DEFAULT",
-    onUpdate: "RESTRICT",
-    defaultValue: 0,
+    as: "friend",
   });
 
-  User.hasMany(Comment, { foreignKey: "userID", as: "comments" });
-  User.hasMany(Article, { foreignKey: "authorID", as: "articles" });
-
+  User.hasMany(Comment, { 
+    foreignKey: "authorID", 
+    as: "comments",
+    onDelete: "CASCADE",
+  });
   Comment.belongsTo(User, {
-    foreignKey: "userID",
-    onDelete: "SET DEFAULT",
-    onUpdate: "RESTRICT",
-    defaultValue: 0,
+    foreignKey: "authorID",
+    as: "author",
   });
 
+
+  Article.hasMany(Comment, { 
+    foreignKey: "articleID", 
+    as: "comments" ,
+    onDelete: "SET NULL",
+  });
   Comment.belongsTo(Article, {
     foreignKey: "articleID",
-    onDelete: "CASCADE",
-    onUpdate: "RESTRICT",
   });
 
-  Article.belongsTo(User, {
+  User.hasMany(Article, {
     foreignKey: "authorID",
+    as: "articles",
     onDelete: "SET DEFAULT",
     onUpdate: "RESTRICT",
+  });
+  Article.belongsTo(User, {
+    foreignKey: "authorID",
+    as: "author",
     defaultValue: 0,
   });
-  Article.hasMany(Comment, { foreignKey: "articleID", as: "comments" });
 
-  Room.hasMany(Message, { foreignKey: "roomID" });
-  Message.belongsTo(Room, { foreignKey: "roomID", onDelete: "CASCADE" });
-
-  Room.belongsTo(User, { foreignKey: "ownerID" });
   User.hasMany(Room, { foreignKey: "ownerID" });
+  Room.belongsTo(User, { foreignKey: "ownerID" });
 
-  Room.belongsToMany(User, { through: "userRoom", foreignKey: "roomID" });
-  User.belongsToMany(Room, { through: "userRoom", foreignKey: "userID" });
+  User.belongsToMany(Room, {
+    through: "userRoom",
+    foreignKey: "userID",
+    as: "userRooms",
+  });
+  Room.belongsToMany(User, {
+    through: "userRoom",
+    foreignKey: "roomID",
+    as: "userRooms",
+  });
 
-  Message.belongsTo(User, { foreignKey: "authorID" });
-  User.hasMany(Message, { foreignKey: "authorID" });
+  User.hasMany(Message, { 
+    foreignKey: "authorID", 
+  });
+  Message.belongsTo(User, { 
+    foreignKey: "authorID" ,
+  });
+  Room.hasMany(Message, { 
+    foreignKey: "roomID", 
+    as: "messages", 
+    onDelete: "CASCADE",
+  });
+  Message.belongsTo(Room, { 
+    foreignKey: "roomID",
+  });
 };

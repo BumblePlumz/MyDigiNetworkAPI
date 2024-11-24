@@ -26,23 +26,14 @@ export function asyncCrypt(password) {
     });
 }
 
-export const isArticleAuthor = (articleID, authorID) => {
-    return articleID === authorID;
-};
-
-export const isCommentAuthor = (commentID, authorID) => {
-    return commentID === authorID;
+export const isAuthor = (authorID, modelID) => {
+    return authorID === modelID;
 };
 
 export const isSubscribedTo = async (userID, authorID) => {
     const subscriptions = await Subscription.findAll({ where: { ownerID: userID } });
     return subscriptions.some((sub) => sub.targetID === authorID);
 };
-
-export const IDsOfSubscriptions = async (userID) => {
-    const subscription = await Subscription.findAll({ where: { ownerID: userID } });
-    return subscription.map((sub) => sub.targetID);
-}
 
 export const saveImageFromBase64 = (base64String) => {
     const matches = base64String.match(/^data:(.+);base64,(.+)$/);
@@ -66,3 +57,9 @@ export const saveImageFromBase64 = (base64String) => {
     fs.writeFileSync(filePath, buffer);
     return { mimeType, filePath };
 };
+
+export function updateTime(object) {
+    if (object.changed()) {
+        object.updatedAt = new Date();
+    }
+}

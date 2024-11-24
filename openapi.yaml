@@ -1,0 +1,1077 @@
+openapi: 3.1.0
+info:
+  title: Swagger My Digi Network  OpenAPI 3.0
+  description: |-
+    This is a sample Student Social Network Server based on the OpenAPI 3.0 specification. In this version of the student social network API, we've switched to a design-first approach, ensuring that the API is well-documented and easy to improve collaboratively.
+
+    You can now contribute to this API by suggesting changes to the API definition itself or by modifying the underlying codebase. This collaborative approach allows us to enhance the API continuously, making it easier for students to connect, collaborate, and share resources in a secure and efficient environment.
+
+    Some useful links:
+    - The Student Social Network API repository — ([link to the GitHub repository](https://github.com/BumblePlumz/SocialNetwork.git))
+
+    1. User Registration and Authentication: Students can sign up, log in, and manage their profiles.
+    2. Articles : Students can post article, comment article and subscribe to other students post.
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: fake@fake.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+servers:
+  - url: http://localhost:3000/api
+tags:
+  - name: Authentification
+    description: User can register and login in the API.
+  - name: User
+    description: Manage user profile.
+  - name: Article
+    description: Operations about articles.
+  - name: Comment
+    description: Operations about comments.
+  - name: Subscription
+    description: Subscribe or unsubscribe to other users.
+  - name: Room
+    description: Operations about rooms
+  - name: Message
+    description: Operations about messages
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentification
+      summary: Create an account
+      description: A user can register a new account.
+      operationId: register
+      requestBody:
+        description: test
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "newuser@example.com"
+                password:
+                  type: string
+                  example: "password123"
+              required:
+                - email
+                - password
+      responses:
+        "201":
+          description: User account created successfully
+        "400":
+          description: Bad request, invalid input
+        "409":
+          description: Conflict, user already exists
+
+  /auth/login:
+    post:
+      tags:
+        - Authentification
+      summary: User login
+      description: A user can log in to their account.
+      operationId: login
+      requestBody:
+        description: User credentials for login
+        required: true # Indicates that this request body is required
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "newuser@example.com"
+                password:
+                  type: string
+                  example: "password123"
+              required:
+                - email
+                - password
+      responses:
+        "200":
+          description: Login successful, returns a JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "your.jwt.token.here"
+        "400":
+          description: Bad request, invalid input
+        "401":
+          description: Unauthorized, invalid credentials
+
+  /user/photo:
+    put:
+      summary: Upload or Update Profile Photo
+      description: Upload a profile photo either via file upload or base64 encoded image.
+      operationId: uploadProfilePhoto
+      tags:
+        - User
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                base64_image:
+                  type: string
+                  example: "data:image/png;base64,..."
+      responses:
+        "200":
+          description: Profile photo uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jwt:
+                    type: string
+                    example: "jwt.token.value"
+                  message:
+                    type: string
+                    example: "Photo uploaded"
+        "400":
+          description: Bad request, no image uploaded
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /user:
+    put:
+      summary: Update User Profile
+      description: Updates the user profile with provided details (firstname, lastname, email).
+      operationId: updateUserProfile
+      tags:
+        - User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstname:
+                  type: string
+                  example: "John"
+                lastname:
+                  type: string
+                  example: "Doe"
+                email:
+                  type: string
+                  format: email
+                  example: "johndoe@example.com"
+                photo:
+                  type: string
+                  example: "base64encodedimage"
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jwt:
+                    type: string
+                    example: "jwt.token.value"
+                  message:
+                    type: string
+                    example: "Profile updated"
+        "400":
+          description: Bad request, invalid profile data
+        "404":
+          description: User not found
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /user/password:
+    patch:
+      summary: Change User Password
+      description: Changes the user's password, requires old password, new password, and confirmation.
+      operationId: changeUserPassword
+      tags:
+        - User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  example: "password123"
+                newPassword:
+                  type: string
+                  example: "newpassword123"
+                confirmPassword:
+                  type: string
+                  example: "newpassword123"
+      responses:
+        "200":
+          description: Password updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Password updated, login needed"
+        "400":
+          description: Bad request, missing passwords or mismatch
+        "403":
+          description: Unauthorized, old password incorrect
+        "404":
+          description: User not found
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /subscription:
+    get:
+      summary: Get User's Subscriptions
+      description: Retrieves all subscriptions for the currently authenticated user.
+      operationId: getUserSubscriptions
+      tags:
+        - Subscription
+      responses:
+        "200":
+          description: List of subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subscription"
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /subscription/{id}:
+    post:
+      summary: Subscribe to a User
+      description: Subscribes the currently authenticated user to another user by their ID.
+      operationId: subscribeToUser
+      tags:
+        - Subscription
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 2
+      responses:
+        "201":
+          description: Successfully subscribed to the user
+        "500":
+          description: Internal server error
+        "400":
+          description: Invalid target user ID
+      security:
+        - jwt: []
+
+    delete:
+      summary: Unsubscribe from a User
+      description: Unsubscribes the currently authenticated user from another user by their ID.
+      operationId: unsubscribeFromUser
+      tags:
+        - Subscription
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 2
+      responses:
+        "204":
+          description: Successfully unsubscribed from the user
+        "500":
+          description: Internal server error
+        "400":
+          description: Invalid target user ID
+      security:
+        - jwt: []
+
+  /article:
+    get:
+      summary: Get All Articles
+      description: Retrieves all articles for the authenticated user.
+      operationId: getAllArticles
+      tags:
+        - Article
+      responses:
+        "200":
+          description: List of all articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Article"
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+    post:
+      summary: Create a New Article
+      description: Creates a new article with the authenticated user as the author.
+      operationId: createArticle
+      tags:
+        - Article
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "My First Article"
+                content:
+                  type: string
+                  example: "This is the content of the article."
+      responses:
+        "201":
+          description: Article created successfully
+        "400":
+          description: Missing or invalid data
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /articles/one/{id}:
+    get:
+      summary: Récupère un article spécifique
+      description: Retourne les détails d'un article spécifique par ID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Article trouvé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+        "404":
+          description: Article non trouvé
+
+  /article/me:
+    get:
+      summary: Get My Articles
+      description: Retrieves all articles written by the authenticated user.
+      operationId: getMyArticles
+      tags:
+        - Article
+      responses:
+        "200":
+          description: List of the authenticated user's articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Article"
+        "401":
+          description: Unauthorized - User is not authenticated
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /article/subscribed:
+    get:
+      summary: Get Articles from Subscribed Authors
+      description: Retrieves articles from authors the authenticated user is subscribed to.
+      operationId: getSubscribedArticles
+      tags:
+        - Article
+      responses:
+        "200":
+          description: List of articles from subscribed authors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Article"
+        "401":
+          description: Unauthorized - User is not authenticated
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /article/{id}:
+    put:
+      summary: Update an Article
+      description: Updates the title and/or content of an article by its ID.
+      operationId: updateArticle
+      tags:
+        - Article
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: ID of the article to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Updated Article Title"
+                content:
+                  type: string
+                  example: "Updated article content."
+      responses:
+        "200":
+          description: Article updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+        "404":
+          description: Article not found
+        "403":
+          description: Unauthorized to update article
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+    delete:
+      summary: Delete an Article
+      description: Deletes an article by its ID.
+      operationId: deleteArticle
+      tags:
+        - Article
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: ID of the article to delete
+      responses:
+        "204":
+          description: Article deleted successfully
+        "404":
+          description: Article not found
+        "403":
+          description: Unauthorized to delete article
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /comment/{id}:
+    post:
+      summary: Post a Comment
+      description: Allows authenticated users to post a comment on an article
+      operationId: postComment
+      tags:
+        - Comment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: "This is a comment on the article."
+      responses:
+        "201":
+          description: Comment posted successfully
+        "400":
+          description: Missing or invalid content
+        "403":
+          description: Unauthorized to comment
+        "404":
+          description: Article not found
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+    put:
+      summary: Update a Comment
+      description: Allows authenticated users to update their own comment.
+      operationId: updateComment
+      tags:
+        - Comment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: "Updated comment content."
+      responses:
+        "200":
+          description: Comment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "403":
+          description: Unauthorized to update comment
+        "404":
+          description: Comment not found
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+    delete:
+      summary: Delete a Comment
+      description: Allows authenticated users to delete their own comment.
+      operationId: deleteComment
+      tags:
+        - Comment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "204":
+          description: Comment deleted successfully
+        "403":
+          description: Unauthorized to delete comment
+        "404":
+          description: Comment not found
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /message/{id}:
+    post:
+      summary: Post a Message
+      description: Allows authenticated users to post a message in a specific chat room.
+      operationId: postMessage
+      tags:
+        - Message
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: "Hello, this is a new message!"
+      responses:
+        "201":
+          description: Message posted successfully
+        "400":
+          description: Missing or invalid content
+        "403":
+          description: Unauthorized to post message
+        "404":
+          description: Room not found
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+    patch:
+      summary: Update a Message
+      description: Allows authenticated users to update their own message.
+      operationId: patchMessage
+      tags:
+        - Message
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: "Updated message content."
+      responses:
+        "200":
+          description: Message updated successfully
+        "400":
+          description: Missing or invalid content
+        "403":
+          description: Unauthorized to update message
+        "404":
+          description: Message not found
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+    delete:
+      summary: Delete a Message
+      description: Allows authenticated users to delete their own message.
+      operationId: deleteMessage
+      tags:
+        - Message
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Message deleted successfully
+        "403":
+          description: Unauthorized to delete message
+        "404":
+          description: Message not found
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /room:
+    get:
+      summary: Get All Rooms for a User
+      description: Retrieves all rooms owned by the authenticated user along with messages.
+      operationId: getRooms
+      tags:
+        - Room
+      responses:
+        "200":
+          description: List of all rooms for the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rooms:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Room"
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+    post:
+      summary: Create a New Room
+      description: Creates a new room with the authenticated user as the owner.
+      operationId: createRoom
+      tags:
+        - Room
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "New Room"
+      responses:
+        "201":
+          description: Room created successfully
+        "409":
+          description: Room already exists
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /room/{name}:
+    get:
+      summary: Get Room by Name
+      description: Retrieves a room by its name along with its messages.
+      operationId: getRoomByName
+      tags:
+        - Room
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+            example: "my-room"
+      responses:
+        "200":
+          description: Room found successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+        "404":
+          description: Room not found
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /room/add/{name}:
+    post:
+      summary: Add User to Room
+      description: Adds a user to a room if the authenticated user is the room's owner.
+      operationId: addUserToRoom
+      tags:
+        - Room
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+            example: "my-room"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                friendID:
+                  type: integer
+                  example: 2
+      responses:
+        "201":
+          description: User added to room successfully
+        "404":
+          description: Room not found
+        "403":
+          description: Unauthorized to add user (not room owner)
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+    delete:
+      summary: Delete a room
+      description: Allows the authenticated user to delete a room by its ID.
+      operationId: deleteRoom
+      tags:
+        - Room
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Room deleted successfully
+        "404":
+          description: Room not found
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+  /room/{id}:
+    patch:
+      summary: Update Room Name
+      description: Updates the name of a room if the authenticated user is the owner of the room.
+      operationId: patchRoomName
+      tags:
+        - Room
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Updated Room Name"
+      responses:
+        "200":
+          description: Room name updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+        "404":
+          description: Room not found
+        "403":
+          description: Unauthorized to update room (not room owner)
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+    delete:
+      summary: Delete a Room
+      description: Deletes a room if the authenticated user is the owner of the room.
+      operationId: deleteRoom
+      tags:
+        - Room
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: Room deleted successfully
+        "404":
+          description: Room not found
+        "403":
+          description: Unauthorized to delete room (not room owner)
+        "500":
+          description: Internal server error
+      security:
+        - jwt: []
+
+components:
+  schemas:
+    User:
+      type: object
+      xml:
+        name: user
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100000
+        firstname:
+          type: string
+          example: "John"
+        lastname:
+          type: string
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          example: "johndoe@example.com"
+        password:
+          type: string
+          example: "password123"
+        photo:
+          type: string
+          example: "base64encodedimage"
+      required:
+        - email
+        - password
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 100000
+        firstname:
+          type: string
+          example: "John"
+        lastname:
+          type: string
+          example: "Doe"
+
+    Article:
+      type: object
+      xml:
+        name: article
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100001
+        title:
+          type: string
+          example: "Understanding API Design"
+        content:
+          type: string
+          example: "This is the content of the article..."
+        authorID:
+          $ref: "#/components/schemas/UserSummary"
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+      required:
+        - title
+        - content
+        - author
+
+    Comment:
+      type: object
+      xml:
+        name: comment
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100002
+        content:
+          type: string
+          example: "This is a comment on the article."
+        userID:
+          $ref: "#/components/schemas/UserSummary"
+      required:
+        - content
+        - userID
+        - articleID
+
+    Subscription:
+      type: object
+      xml:
+        name: subscription
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100003
+        ownerID:
+          $ref: "#/components/schemas/UserSummary"
+        targetID:
+          $ref: "#/components/schemas/UserSummary"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-10-22T10:15:30Z"
+      required:
+        - owner
+        - target
+        - createdAt
+
+    Message:
+      type: object
+      xml:
+        name: message
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100004
+        content:
+          type: string
+          example: "This is a message."
+        roomID:
+          type: integer
+          example: 100005
+        authorID:
+          type: integer
+          example: 100000
+      required:
+        - content
+        - roomID
+        - authorID
+
+    Room:
+      type: object
+      xml:
+        name: room
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 100006
+        name:
+          type: string
+          example: "General Discussion"
+        ownerID:
+          type: integer
+          example: 100000
+      required:
+        - name
+        - ownerID
+
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+          example: 404
+        message:
+          type: string
+          example: User not found
+      xml:
+        name: "##default"
+  requestBodies:
+    UserArray:
+      description: List of user object
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/User"
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

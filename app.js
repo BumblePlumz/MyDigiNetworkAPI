@@ -72,5 +72,3 @@ app.use(errorMiddleware);
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
-
-// Comment to trigger Jenkins build

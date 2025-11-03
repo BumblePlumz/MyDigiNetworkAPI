@@ -1,2 +1,23 @@
+
 node_modules
 .env
+
+# Test coverage
+coverage
+*.coverage
+.nyc_output
+
+# Test results
+junit.xml
+test-results/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

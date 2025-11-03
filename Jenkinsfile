@@ -126,7 +126,7 @@ pipeline {
                     
                     withCredentials([gitUsernamePassword(credentialsId: 'bumble-jenkins-token', gitToolName: 'Default')]) { 
                         sh """
-                            echo ${GITHUB_TOKEN} | docker login ${GITHUB_REGISTRY} -u ${GITHUB_USERNAME} --password-stdin
+                            echo ${GIT_PASSWORD} | docker login ${GITHUB_REGISTRY} -u ${GIT_USERNAME} --password-stdin
                             
                             echo "Pushing ${DOCKER_IMAGE}:${IMAGE_TAG}..."
                             docker push ${DOCKER_IMAGE}:${IMAGE_TAG}

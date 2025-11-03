@@ -19,13 +19,6 @@ pipeline {
         }
 
         stage('Build Dependencies') {
-            agent {
-                docker {
-                    image 'node:22.21.1-bookworm'
-                    args '-v $WORKSPACE:/app -w /app'
-                    reuseNode true
-                }
-            }
             steps {
                 echo '📦 Installing dependencies...'
                 sh 'npm ci'
@@ -34,13 +27,6 @@ pipeline {
         }
 
         stage('Run Tests') {
-            agent {
-                docker {
-                    image 'node:22.21.1-bookworm'
-                    args '-v $WORKSPACE:/app -w /app'
-                    reuseNode true
-                }
-            }
             steps {
                 echo '🧪 Running unit tests...'
                 sh 'npm run test:ci'
@@ -66,13 +52,6 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            agent {
-                docker {
-                    image 'docker:24.0.5-cli'
-                    args '-u root -v /var/run/docker.sock:/var/run/docker.sock -v $WORKSPACE:/app -w /app'
-                    reuseNode true
-                }
-            }
             steps {
                 script {
                     echo '🐳 Building Docker image...'
@@ -96,13 +75,6 @@ pipeline {
         }
         
         stage("Tag Repository") {
-            agent {
-                docker {
-                    image 'docker:24.0.5-cli'
-                    args '-u root -v $WORKSPACE:/app -w /app'
-                    reuseNode true
-                }
-            }
             when {
                 branch 'main'
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
@@ -112,9 +84,6 @@ pipeline {
                     def tagName = "v1.0.${env.BUILD_NUMBER}"
                     
                     echo "🏷️  Creating Git tag: ${tagName}"
-                    
-                    // Install git in alpine-based docker image
-                    sh 'apk add --no-cache git'
                     
                     withCredentials([gitUsernamePassword(credentialsId: 'bumble-jenkins-token', gitToolName: 'Default')]) {
                         sh """
@@ -141,13 +110,6 @@ pipeline {
         }
 
         stage("Push to GitHub Packages") {
-            agent {
-                docker {
-                    image 'docker:24.0.5-cli'
-                    args '-u root -v /var/run/docker.sock:/var/run/docker.sock -v $WORKSPACE:/app -w /app'
-                    reuseNode true
-                }
-            }
             when {
                 branch 'main'
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }

@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Application principale
+  api:
+    image: ghcr.io/bumbleplumz/mydiginetworkapi:latest
+    container_name: social-network-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-your-default-secret-change-me}
+      - JWT_DURATION=${JWT_DURATION:-24h}
+    volumes:
+      # Persister la base de données SQLite
+      - ./data:/app/src/data
+      # Persister les uploads
+      - ./uploads:/app/public/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - social-network
+
+  # Optionnel: Nginx comme reverse proxy
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: social-network-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - api
+  #   restart: unless-stopped
+  #   networks:
+  #     - social-network
+
+networks:
+  social-network:
+    driver: bridge
+
+volumes:
+  data:
+  uploads:

@@ -19,6 +19,13 @@ pipeline {
         }
 
         stage('Build Dependencies') {
+            agent {
+                docker {
+                    image 'node:22.11.0-bookworm-slim'
+                    args '-v $WORKSPACE:/app -w /app'
+                    reuseNode true
+                }
+            }
             steps {
                 echo '📦 Installing dependencies...'
                 sh 'npm ci'
@@ -27,6 +34,13 @@ pipeline {
         }
 
         stage('Run Tests') {
+            agent {
+                docker {
+                    image 'node:22.11.0-bookworm-slim'
+                    args '-v $WORKSPACE:/app -w /app'
+                    reuseNode true
+                }
+            }
             steps {
                 echo '🧪 Running unit tests...'
                 sh 'npm run test:ci'

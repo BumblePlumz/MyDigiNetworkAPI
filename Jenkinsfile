@@ -27,7 +27,6 @@ pipeline {
             steps {
                 echo '📦 Installing dependencies...'
                 sh 'npm ci'
-                sh 'npm run build'
                 echo '✅ Dependencies installed successfully!'
             }
         }
@@ -148,7 +147,7 @@ pipeline {
                 }
             }
         }
-        
-           
+
+
     }
 }

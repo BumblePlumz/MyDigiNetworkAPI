@@ -15,15 +15,6 @@ pipeline {
                 echo '📥 Cloning repository...'
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'mydi-api-pipeline', url: 'https://github.com/BumblePlumz/MyDigiNetworkAPI.git']])
                 echo '✅ Repository cloned successfully!'
-                
-                // Debug: print all relevant env vars
-                script {
-                    echo "=== DEBUG INFO ==="
-                    echo "BRANCH_NAME: ${env.BRANCH_NAME}"
-                    echo "GIT_BRANCH: ${env.GIT_BRANCH}"
-                    sh 'git branch -a'
-                    sh 'git rev-parse --abbrev-ref HEAD'
-                }
             }
         }
 
@@ -98,16 +89,11 @@ pipeline {
         }
         
         stage("Tag Repository") {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
                     def tagName = "v1.0.${env.BUILD_NUMBER}"
                     
                     echo "🏷️  Creating Git tag: ${tagName}"
-                    echo "Branch: ${env.BRANCH_NAME}"
-                    echo "Build result: ${currentBuild.result}"
                     
                     withCredentials([gitUsernamePassword(credentialsId: 'bumble-jenkins-token', gitToolName: 'Default')]) {
                         sh """
@@ -134,9 +120,6 @@ pipeline {
         }
 
         stage("Push to GitHub Packages") {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
                     echo "📤 Pushing Docker image to GitHub Container Registry..."

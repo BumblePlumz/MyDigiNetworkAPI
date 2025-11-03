@@ -1,9 +1,8 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:22.21.1-bookworm'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
+    agent any
+
+    tools {
+        nodejs 'nodejs'  // Utilise la config NodeJS de Jenkins
     }
 
     environment {
@@ -226,17 +225,23 @@ Build Information:
                 }
             }
         }
+
+        stage("Cleanup") {
+            steps {
+                script {
+                    echo "🧹 Cleaning up old Docker images..."
+                    sh '''
+                        docker system prune -f --filter "until=72h" || true
+                        echo "✅ Cleanup completed!"
+                    '''
+                }
+            }
+        }
     }
 
     post {
         always {
             echo "🏁 Pipeline completed."
-            script {
-                sh '''
-                    echo "Cleaning up old Docker images..."
-                    docker system prune -f --filter "until=72h" || true
-                '''
-            }
         }
         success {
             echo """

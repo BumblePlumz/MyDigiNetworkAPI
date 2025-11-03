@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:22.21.1-bookworm'
-            args '-v /var/run/docker.sock:/var/run/docker.sock -v $WORKSPACE:/app -w /app'
-        }
-    }
+    agent any
 
     environment {
         DOCKER_IMAGE = 'ghcr.io/bumbleplumz/mydiginetworkapi'
@@ -24,6 +19,13 @@ pipeline {
         }
 
         stage('Build Dependencies') {
+            agent {
+                docker {
+                    image 'node:22.21.1-bookworm'
+                    args '-v $WORKSPACE:/app -w /app'
+                    reuseNode true
+                }
+            }
             steps {
                 echo '📦 Installing dependencies...'
                 sh 'npm ci'
@@ -32,6 +34,13 @@ pipeline {
         }
 
         stage('Run Tests') {
+            agent {
+                docker {
+                    image 'node:22.21.1-bookworm'
+                    args '-v $WORKSPACE:/app -w /app'
+                    reuseNode true
+                }
+            }
             steps {
                 echo '🧪 Running unit tests...'
                 sh 'npm run test:ci'
@@ -57,10 +66,19 @@ pipeline {
         }
 
         stage('Build Docker Image') {
+            agent {
+                docker {
+                    image 'docker:24.0.5-cli'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock -v $WORKSPACE:/app -w /app'
+                    reuseNode true
+                }
+            }
             steps {
                 script {
                     echo '🐳 Building Docker image...'
                     echo "Image: ${DOCKER_IMAGE}:${IMAGE_TAG}"
+                    
+                    sh 'docker --version'
 
                     sh """
                         docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} \
@@ -78,6 +96,13 @@ pipeline {
         }
         
         stage("Tag Repository") {
+            agent {
+                docker {
+                    image 'docker:24.0.5-git'
+                    args '-v $WORKSPACE:/app -w /app'
+                    reuseNode true
+                }
+            }
             when {
                 branch 'main'
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
@@ -88,11 +113,7 @@ pipeline {
                     
                     echo "🏷️  Creating Git tag: ${tagName}"
                     
-                    withCredentials([usernamePassword(
-                        credentialsId: 'efabefe9-b7dd-477c-afec-b748dd7e60a5',
-                        usernameVariable: 'GIT_USERNAME',
-                        passwordVariable: 'GIT_PASSWORD'
-                    )]) {
+                    withCredentials([gitUsernamePassword(credentialsId: 'bumble-jenkins-token', gitToolName: 'Default')]) {
                         sh """
                             git config user.name "Jenkins CI"
                             git config user.email "jenkins@ci.local"
@@ -117,6 +138,13 @@ pipeline {
         }
 
         stage("Push to GitHub Packages") {
+            agent {
+                docker {
+                    image 'docker:24.0.5-cli'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock -v $WORKSPACE:/app -w /app'
+                    reuseNode true
+                }
+            }
             when {
                 branch 'main'
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }

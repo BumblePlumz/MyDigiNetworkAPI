@@ -125,23 +125,26 @@ pipeline {
                     echo "📤 Pushing Docker image to GitHub Container Registry..."
                     
                     withCredentials([gitUsernamePassword(credentialsId: 'MyDigiApi-package-token', gitToolName: 'Default')]) {
-                        sh """
-                            echo ${GIT_PASSWORD} | docker login ${GITHUB_REGISTRY} -u ${GIT_USERNAME} --password-stdin
-                            
-                            echo "Pushing ${DOCKER_IMAGE}:${IMAGE_TAG}..."
-                            docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
-                            
-                            echo "Pushing ${DOCKER_IMAGE}:${LATEST_TAG}..."
-                            docker push ${DOCKER_IMAGE}:${LATEST_TAG}
-                            
-                            echo "Pushing ${DOCKER_IMAGE}:${env.GIT_COMMIT[0..6]}..."
-                            docker push ${DOCKER_IMAGE}:${env.GIT_COMMIT[0..6]}
-                            
-                            docker logout ${GITHUB_REGISTRY}
-                            
-                            echo "✅ Docker images pushed successfully to GitHub Packages!"
-                            echo "📦 Available at: https://github.com/${GITHUB_REPO}/pkgs/container/mydiginetworkapi"
-                        """
+                        // Retry up to 3 times in case of GHCR temporary errors (500, timeouts)
+                        retry(3) {
+                            sh """
+                                echo ${GIT_PASSWORD} | docker login ${GITHUB_REGISTRY} -u ${GIT_USERNAME} --password-stdin
+                                
+                                echo "Pushing ${DOCKER_IMAGE}:${IMAGE_TAG}..."
+                                docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
+                                
+                                echo "Pushing ${DOCKER_IMAGE}:${LATEST_TAG}..."
+                                docker push ${DOCKER_IMAGE}:${LATEST_TAG}
+                                
+                                echo "Pushing ${DOCKER_IMAGE}:${env.GIT_COMMIT[0..6]}..."
+                                docker push ${DOCKER_IMAGE}:${env.GIT_COMMIT[0..6]}
+                                
+                                docker logout ${GITHUB_REGISTRY}
+                            """
+                        }
+                        
+                        echo "✅ Docker images pushed successfully to GitHub Packages!"
+                        echo "📦 Available at: https://github.com/${GITHUB_REPO}/pkgs/container/mydiginetworkapi"
                     }
                 }
             }

@@ -124,7 +124,7 @@ pipeline {
                 script {
                     echo "📤 Pushing Docker image to GitHub Container Registry..."
                     
-                    withCredentials([gitUsernamePassword(credentialsId: 'bumble-jenkins-token', gitToolName: 'Default')]) { 
+                    withCredentials([gitUsernamePassword(credentialsId: 'MyDigiApi-package-token', gitToolName: 'Default')]) {
                         sh """
                             echo ${GIT_PASSWORD} | docker login ${GITHUB_REGISTRY} -u ${GIT_USERNAME} --password-stdin
                             

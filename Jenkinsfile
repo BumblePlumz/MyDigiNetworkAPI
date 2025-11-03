@@ -59,7 +59,7 @@ pipeline {
             }
             steps {
                 echo "Deploying application..."
-                nodejs('Node 18') {
+                nodejs('nodejs') {
                     sh 'npm run deploy'
                 }
             }

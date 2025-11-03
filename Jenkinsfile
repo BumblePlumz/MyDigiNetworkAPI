@@ -91,13 +91,14 @@ pipeline {
         stage("Tag Repository") {
             when {
                 branch 'main'
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
                 script {
                     def tagName = "v1.0.${env.BUILD_NUMBER}"
                     
                     echo "🏷️  Creating Git tag: ${tagName}"
+                    echo "Branch: ${env.BRANCH_NAME}"
+                    echo "Build result: ${currentBuild.result}"
                     
                     withCredentials([gitUsernamePassword(credentialsId: 'bumble-jenkins-token', gitToolName: 'Default')]) {
                         sh """
@@ -126,7 +127,6 @@ pipeline {
         stage("Push to GitHub Packages") {
             when {
                 branch 'main'
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
                 script {

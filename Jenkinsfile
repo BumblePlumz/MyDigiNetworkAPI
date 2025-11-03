@@ -69,7 +69,7 @@ pipeline {
             agent {
                 docker {
                     image 'docker:24.0.5-cli'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock -v $WORKSPACE:/app -w /app'
+                    args '-u root -v /var/run/docker.sock:/var/run/docker.sock -v $WORKSPACE:/app -w /app'
                     reuseNode true
                 }
             }
@@ -99,7 +99,7 @@ pipeline {
             agent {
                 docker {
                     image 'docker:24.0.5-git'
-                    args '-v $WORKSPACE:/app -w /app'
+                    args '-u root -v $WORKSPACE:/app -w /app'
                     reuseNode true
                 }
             }
@@ -141,7 +141,7 @@ pipeline {
             agent {
                 docker {
                     image 'docker:24.0.5-cli'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock -v $WORKSPACE:/app -w /app'
+                    args '-u root -v /var/run/docker.sock:/var/run/docker.sock -v $WORKSPACE:/app -w /app'
                     reuseNode true
                 }
             }

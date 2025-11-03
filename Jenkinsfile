@@ -98,7 +98,7 @@ pipeline {
         stage("Tag Repository") {
             agent {
                 docker {
-                    image 'docker:24.0.5-git'
+                    image 'alpine/git:latest'
                     args '-u root -v $WORKSPACE:/app -w /app'
                     reuseNode true
                 }

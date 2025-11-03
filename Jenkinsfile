@@ -98,7 +98,7 @@ pipeline {
         stage("Tag Repository") {
             agent {
                 docker {
-                    image 'alpine/git:latest'
+                    image 'docker:24.0.5-cli'
                     args '-u root -v $WORKSPACE:/app -w /app'
                     reuseNode true
                 }
@@ -112,6 +112,9 @@ pipeline {
                     def tagName = "v1.0.${env.BUILD_NUMBER}"
                     
                     echo "🏷️  Creating Git tag: ${tagName}"
+                    
+                    // Install git in alpine-based docker image
+                    sh 'apk add --no-cache git'
                     
                     withCredentials([gitUsernamePassword(credentialsId: 'bumble-jenkins-token', gitToolName: 'Default')]) {
                         sh """
@@ -175,7 +178,5 @@ pipeline {
                 }
             }
         }
-
-
     }
 }

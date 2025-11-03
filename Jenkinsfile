@@ -6,6 +6,14 @@ pipeline {
         }
     }
 
+    environment {
+        DOCKER_IMAGE = 'ghcr.io/bumbleplumz/mydiginetworkapi'
+        GITHUB_REGISTRY = 'ghcr.io'
+        GITHUB_REPO = 'BumblePlumz/MyDigiNetworkAPI'
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        LATEST_TAG = 'latest'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -15,10 +23,11 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build Dependencies') {
             steps {
                 echo '📦 Installing dependencies...'
                 sh 'npm ci'
+                sh 'npm run build'
                 echo '✅ Dependencies installed successfully!'
             }
         }
@@ -47,5 +56,99 @@ pipeline {
                 }
             }
         }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo '🐳 Building Docker image...'
+                    echo "Image: ${DOCKER_IMAGE}:${IMAGE_TAG}"
+
+                    sh """
+                        docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} \
+                                     -t ${DOCKER_IMAGE}:${LATEST_TAG} \
+                                     -t ${DOCKER_IMAGE}:${env.GIT_COMMIT[0..6]} \
+                                     --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \
+                                     --build-arg GIT_COMMIT=${env.GIT_COMMIT[0..6]} \
+                                     .
+
+                        echo "✅ Docker image built successfully"
+                        docker images | grep mydiginetworkapi
+                    """
+                }
+            }
+        }
+        
+        stage("Tag Repository") {
+            when {
+                branch 'main'
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
+            steps {
+                script {
+                    def tagName = "v1.0.${env.BUILD_NUMBER}"
+                    
+                    echo "🏷️  Creating Git tag: ${tagName}"
+                    
+                    withCredentials([usernamePassword(
+                        credentialsId: 'efabefe9-b7dd-477c-afec-b748dd7e60a5',
+                        usernameVariable: 'GIT_USERNAME',
+                        passwordVariable: 'GIT_PASSWORD'
+                    )]) {
+                        sh """
+                            git config user.name "Jenkins CI"
+                            git config user.email "jenkins@ci.local"
+                            
+                            git tag -a ${tagName} -m "Release v1.0.${env.BUILD_NUMBER}
+                            
+                            Build Information:
+                            - Build Number: #${env.BUILD_NUMBER}
+                            - Commit: ${env.GIT_COMMIT[0..6]}
+                            - Date: \$(date '+%Y-%m-%d %H:%M:%S')
+                            - Tests: ✅ Passed
+                            - Docker Image: ${DOCKER_IMAGE}:${IMAGE_TAG}
+                            - Status: Ready for deployment 🚀"
+                            
+                            git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GITHUB_REPO}.git ${tagName}
+                        """
+                    }
+                    
+                    echo "✅ Tag ${tagName} created and pushed successfully!"
+                }
+            }
+        }
+
+        stage("Push to GitHub Packages") {
+            when {
+                branch 'main'
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
+            steps {
+                script {
+                    echo "📤 Pushing Docker image to GitHub Container Registry..."
+                    
+                    withCredentials([gitUsernamePassword(credentialsId: 'bumble-jenkins-token', gitToolName: 'Default')]) { 
+                        sh """
+                            echo ${GITHUB_TOKEN} | docker login ${GITHUB_REGISTRY} -u ${GITHUB_USERNAME} --password-stdin
+                            
+                            echo "Pushing ${DOCKER_IMAGE}:${IMAGE_TAG}..."
+                            docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
+                            
+                            echo "Pushing ${DOCKER_IMAGE}:${LATEST_TAG}..."
+                            docker push ${DOCKER_IMAGE}:${LATEST_TAG}
+                            
+                            echo "Pushing ${DOCKER_IMAGE}:${env.GIT_COMMIT[0..6]}..."
+                            docker push ${DOCKER_IMAGE}:${env.GIT_COMMIT[0..6]}
+                            
+                            docker logout ${GITHUB_REGISTRY}
+                            
+                            echo "✅ Docker images pushed successfully to GitHub Packages!"
+                            echo "📦 Available at: https://github.com/${GITHUB_REPO}/pkgs/container/mydiginetworkapi"
+                        """
+                    }
+                }
+            }
+        }
+        
+           
     }
 }

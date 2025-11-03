@@ -122,13 +122,13 @@ pipeline {
                             
                             git tag -a ${tagName} -m "Release v1.0.${env.BUILD_NUMBER}
                             
-Build Information:
-- Build Number: #${env.BUILD_NUMBER}
-- Commit: ${env.GIT_COMMIT[0..6]}
-- Date: \$(date '+%Y-%m-%d %H:%M:%S')
-- Tests: ✅ Passed
-- Docker Image: ${DOCKER_IMAGE}:${IMAGE_TAG}
-- Status: Ready for deployment 🚀"
+                            Build Information:
+                            - Build Number: #${env.BUILD_NUMBER}
+                            - Commit: ${env.GIT_COMMIT[0..6]}
+                            - Date: \$(date '+%Y-%m-%d %H:%M:%S')
+                            - Tests: ✅ Passed
+                            - Docker Image: ${DOCKER_IMAGE}:${IMAGE_TAG}
+                            - Status: Ready for deployment 🚀"
                             
                             git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GITHUB_REPO}.git ${tagName}
                         """

@@ -94,3 +94,5 @@ Utilisez l'interface GraphQL pour exécuter des requêtes et des mutations.
 Pour toute question ou problème, veuillez ouvrir une issue sur le dépôt GitHub ou contacter notre équipe de support.
 
 Merci d'utiliser notre API !
+
+<!-- Modification pour CI/CD -->
